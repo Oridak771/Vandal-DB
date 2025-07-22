@@ -1,18 +1,18 @@
-# Phantom-DB
+# Vandal-DB
 
-Phantom-DB is a Kubernetes-native tool for creating masked, anonymized, or synthesized clones of your production databases. It is designed to be used in CI/CD pipelines to provide realistic data for testing and development.
+Vandal-DB is a Kubernetes-native tool for creating masked, anonymized, or synthesized clones of your production databases. It is designed to be used in CI/CD pipelines to provide realistic data for testing and development.
 
 ## Features
 
--   **Kubernetes Native:** Phantom-DB is built on top of Kubernetes and uses Custom Resource Definitions (CRDs) to manage database profiles and clones.
--   **Database Support:** Phantom-DB supports PostgreSQL, with plans to support other databases in the future.
--   **Data Masking:** Phantom-DB can mask, anonymize, or synthesize data using a variety of transformation rules.
--   **Storage Integration:** Phantom-DB integrates with various storage providers to create snapshots of your databases.
--   **Helm Chart:** Phantom-DB is packaged as a Helm chart for easy installation and management.
+-   **Kubernetes Native:** Vandal-DB is built on top of Kubernetes and uses Custom Resource Definitions (CRDs) to manage database profiles and clones.
+-   **Database Support:** Vandal-DB supports PostgreSQL, with plans to support other databases in the future.
+-   **Data Masking:** Vandal-DB can mask, anonymize, or synthesize data using a variety of transformation rules.
+-   **Storage Integration:** Vandal-DB integrates with various storage providers to create snapshots of your databases.
+-   **Helm Chart:** Vandal-DB is packaged as a Helm chart for easy installation and management.
 
 ## Getting Started
 
-To get started with Phantom-DB, you will need a Kubernetes cluster with a CSI driver that supports volume snapshots.
+To get started with Vandal-DB, you will need a Kubernetes cluster with a CSI driver that supports volume snapshots.
 
 1.  **Install the CRDs:**
     ```

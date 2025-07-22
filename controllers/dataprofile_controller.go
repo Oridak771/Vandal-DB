@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,8 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	phantomdbv1alpha1 "github.com/phantom-db/phantom-db/apis/v1alpha1"
-	"github.com/phantom-db/phantom-db/storage"
+phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
+"github.com/vandal-db/vandal-db/storage"
 )
 
 // DataProfileReconciler reconciles a DataProfile object
@@ -39,7 +39,7 @@ type DataProfileReconciler struct {
 	StorageProvider storage.StorageProvider
 }
 
-//+kubebuilder:rbac:groups=phantom.db.io,resources=dataprofiles,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=vandal.db.io,resources=dataprofiles,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=phantom.db.io,resources=dataprofiles/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=phantom.db.io,resources=dataprofiles/finalizers,verbs=update
 //+kubebuilder:rbac:groups=snapshot.storage.k8s.io,resources=volumesnapshots,verbs=get;list;watch;create;update;patch;delete

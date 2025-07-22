@@ -12,8 +12,8 @@ func init() {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number of Phantom-DB",
+Short: "Print the version number of Vandal-DB",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Phantom-DB v0.0.1")
+	fmt.Println("Vandal-DB v0.0.1")
 	},
 }

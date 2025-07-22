@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/phantom-db/phantom-db/cmd/phantom/cmd"
+"github.com/vandal-db/vandal-db/cmd/phantom/cmd"
 )
 
 func main() {

@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
-  name: dataprofiles.phantom.db.io
+  name: dataprofiles.vandal.db.io
 spec:
-  group: phantom.db.io
+  group: vandal.db.io
   names:
     kind: DataProfile
     listKind: DataProfileList

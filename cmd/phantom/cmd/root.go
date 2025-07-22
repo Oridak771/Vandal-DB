@@ -8,9 +8,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "phantom",
-	Short: "Phantom-DB CLI",
-	Long:  `A command-line interface for managing Phantom-DB resources.`,
+Use:   "vandal",
+Short: "Vandal-DB CLI",
+Long:  `A command-line interface for managing Vandal-DB resources.`,
 }
 
 func Execute() {

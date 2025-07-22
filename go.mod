@@ -1,4 +1,4 @@
-module github.com/phantom-db/phantom-db
+module github.com/vandal-db/vandal-db
 
 go 1.24.0
 

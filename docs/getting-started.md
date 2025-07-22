@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will walk you through the process of setting up Phantom-DB and creating your first database clone.
+This guide will walk you through the process of setting up Vandal-DB and creating your first database clone.
 
 ## Prerequisites
 
@@ -12,12 +12,12 @@ This guide will walk you through the process of setting up Phantom-DB and creati
 
 1.  **Install the CRDs:**
     ```
-    kubectl apply -f https://raw.githubusercontent.com/phantom-db/phantom-db/main/config/crd/phantom.db.io_dataprofiles.yaml
-    kubectl apply -f https://raw.githubusercontent.com/phantom-db/phantom-db/main/config/crd/phantom.db.io_dataclones.yaml
+    kubectl apply -f https://raw.githubusercontent.com/vandal-db/vandal-db/main/config/crd/vandal.db.io_dataprofiles.yaml
+    kubectl apply -f https://raw.githubusercontent.com/vandal-db/vandal-db/main/config/crd/vandal.db.io_dataclones.yaml
     ```
 2.  **Install the Controller Manager:**
     ```
-    kubectl apply -f https://raw.githubusercontent.com/phantom-db/phantom-db/main/config/manager/manager.yaml
+    kubectl apply -f https://raw.githubusercontent.com/vandal-db/vandal-db/main/config/manager/manager.yaml
     ```
 
 ## Creating a Clone
@@ -25,7 +25,7 @@ This guide will walk you through the process of setting up Phantom-DB and creati
 1.  **Create a `DataProfile`:**
     Create a `dataprofile.yaml` file with the following content:
     ```yaml
-    apiVersion: phantom.db.io/v1alpha1
+    apiVersion: vandal.db.io/v1alpha1
     kind: DataProfile
     metadata:
       name: postgres-profile-example
@@ -48,7 +48,7 @@ This guide will walk you through the process of setting up Phantom-DB and creati
 2.  **Create a `DataClone`:**
     Create a `dataclone.yaml` file with the following content:
     ```yaml
-    apiVersion: phantom.db.io/v1alpha1
+    apiVersion: vandal.db.io/v1alpha1
     kind: DataClone
     metadata:
       name: postgres-clone-example

@@ -1,10 +1,10 @@
-# Contributing to Phantom-DB
+# Contributing to Vandal-DB
 
-First off, thank you for considering contributing to Phantom-DB! It's people like you that make Phantom-DB such a great tool.
+First off, thank you for considering contributing to Vandal-DB! It's people like you that make Vandal-DB such a great tool.
 
 ## Where do I go from here?
 
-If you've noticed a bug or have a question, [search the issue tracker](https://github.com/phantom-db/phantom-db/issues) to see if someone else has already created a ticket. If not, feel free to [create a new issue](https://github.com/phantom-db/phantom-db/issues/new).
+If you've noticed a bug or have a question, [search the issue tracker](https://github.com/vandal-db/vandal-db/issues) to see if someone else has already created a ticket. If not, feel free to [create a new issue](https://github.com/vandal-db/vandal-db/issues/new).
 
 ## Fork & create a branch
 

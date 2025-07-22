@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	phantomdbv1alpha1 "github.com/phantom-db/phantom-db/apis/v1alpha1"
+phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 

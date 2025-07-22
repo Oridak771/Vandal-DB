@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	phantomdbv1alpha1 "github.com/phantom-db/phantom-db/apis/v1alpha1"
+phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
 	snapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

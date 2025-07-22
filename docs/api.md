@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides a reference for the Phantom-DB API.
+This document provides a reference for the Vandal-DB API.
 
 ## DataProfile
 

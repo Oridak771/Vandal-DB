@@ -60,7 +60,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - phantom.db.io
+  - vandal.db.io
   resources:
   - dataclones
   verbs:

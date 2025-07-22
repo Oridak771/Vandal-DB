@@ -3,7 +3,7 @@ package masking
 import (
 	"context"
 
-	phantomdbv1alpha1 "github.com/phantom-db/phantom-db/apis/v1alpha1"
+phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
 )
 
 // Pipeline defines the interface for a masking pipeline.
