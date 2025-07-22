@@ -1,0 +1,18 @@
+apiVersion: phantom.db.io/v1alpha1
+kind: DataProfile
+metadata:
+  name: postgres-profile-example
+spec:
+  schedule: "0 0 * * *"
+  retentionPolicy:
+    count: 3
+  target:
+    secretName: postgres-credentials
+  masking:
+    rules:
+      - table: users
+        column: email
+        transformation: hash
+      - table: users
+        column: phone_number
+        transformation: redact

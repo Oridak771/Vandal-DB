@@ -1,0 +1,6 @@
+apiVersion: v2
+name: phantom-db
+description: A Helm chart for Phantom-DB
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

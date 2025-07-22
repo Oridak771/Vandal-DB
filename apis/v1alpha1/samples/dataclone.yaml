@@ -1,0 +1,7 @@
+apiVersion: phantom.db.io/v1alpha1
+kind: DataClone
+metadata:
+  name: postgres-clone-example
+spec:
+  sourceProfile: postgres-profile-example
+  ttl: "1h"
