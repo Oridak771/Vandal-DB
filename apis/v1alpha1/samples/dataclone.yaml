@@ -1,4 +1,4 @@
-apiVersion: phantom.db.io/v1alpha1
+apiVersion: vandal.db.io/v1alpha1
 kind: DataClone
 metadata:
   name: postgres-clone-example

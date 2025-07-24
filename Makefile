@@ -1,4 +1,4 @@
-# Makefile for Phantom-DB
+# Makefile for Vandal
 
 .PHONY: all build test clean run
 

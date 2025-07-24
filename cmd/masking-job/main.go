@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/phantom-db/phantom-db/masking"
+	"github.com/Oridak771/Vandal/masking"
 )
 
 func main() {

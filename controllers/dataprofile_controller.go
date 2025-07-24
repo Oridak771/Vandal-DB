@@ -27,8 +27,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
-"github.com/vandal-db/vandal-db/storage"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	vandalv1alpha1 "github.com/Oridak771/Vandal/apis/v1alpha1"
+	"github.com/Oridak771/Vandal/storage"
 )
 
 // DataProfileReconciler reconciles a DataProfile object
@@ -40,8 +42,8 @@ type DataProfileReconciler struct {
 }
 
 //+kubebuilder:rbac:groups=vandal.db.io,resources=dataprofiles,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=phantom.db.io,resources=dataprofiles/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=phantom.db.io,resources=dataprofiles/finalizers,verbs=update
+//+kubebuilder:rbac:groups=vandal.db.io,resources=dataprofiles/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=vandal.db.io,resources=dataprofiles/finalizers,verbs=update
 //+kubebuilder:rbac:groups=snapshot.storage.k8s.io,resources=volumesnapshots,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=snapshot.storage.k8s.io,resources=volumesnapshotclasses,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch
@@ -59,7 +61,7 @@ func (r *DataProfileReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	log := log.FromContext(ctx)
 
 	// Fetch the DataProfile instance
-	var dataProfile phantomdbv1alpha1.DataProfile
+	var dataProfile vandalv1alpha1.DataProfile
 	if err := r.Get(ctx, req.NamespacedName, &dataProfile); err != nil {
 		log.Error(err, "unable to fetch DataProfile")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
@@ -110,10 +112,25 @@ func (r *DataProfileReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Cleanup old snapshots
 	if err := r.StorageProvider.CleanupSnapshots(ctx, &dataProfile); err != nil {
 		log.Error(err, "unable to cleanup snapshots", "DataProfile", dataProfile.Name)
-		// Don't return error, as we still want to update the status
+		// Update status with failure condition
+		meta.SetStatusCondition(&dataProfile.Status.Conditions, metav1.Condition{
+			Type:    "SnapshotCleanup",
+			Status:  metav1.ConditionFalse,
+			Reason:  "Error",
+			Message: err.Error(),
+		})
+		if err := r.Status().Update(ctx, &dataProfile); err != nil {
+			log.Error(err, "unable to update DataProfile status", "DataProfile", dataProfile.Name)
+		}
+		return ctrl.Result{}, err
 	}
 
-	// Update status
+	// Update status with success condition
+	meta.SetStatusCondition(&dataProfile.Status.Conditions, metav1.Condition{
+		Type:   "SnapshotCleanup",
+		Status: metav1.ConditionTrue,
+		Reason: "Success",
+	})
 	dataProfile.Status.LastSnapshotTime = &metav1.Time{Time: time.Now()}
 	if err := r.Status().Update(ctx, &dataProfile); err != nil {
 		log.Error(err, "unable to update DataProfile status", "DataProfile", dataProfile.Name)
@@ -123,18 +140,34 @@ func (r *DataProfileReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-func (r *DataProfileReconciler) createVolumeSnapshot(ctx context.Context, dataProfile *phantomdbv1alpha1.DataProfile) error {
+func (r *DataProfileReconciler) createVolumeSnapshot(ctx context.Context, dataProfile *vandalv1alpha1.DataProfile) error {
 	log := log.FromContext(ctx)
 
-	// 1. Get the PVC name from the secret
-	// This is a placeholder. In a real implementation, you would get the PVC name
-	// from the database pod, which you would find using the secret.
-	pvcName := "my-pvc" // Placeholder
+	// 1. Set the phase to CreatingSnapshot
+	dataProfile.Status.Phase = vandalv1alpha1.DataProfilePhaseCreatingSnapshot
+	if err := r.Status().Update(ctx, dataProfile); err != nil {
+		log.Error(err, "unable to update DataProfile status")
+		return err
+	}
 
-	// 2. Create the VolumeSnapshot object
+	// 2. Get the PVC name from the spec
+	pvcName := dataProfile.Spec.Target.PVCName
+
+	// 3. Create the VolumeSnapshot object
 	snapshot, err := r.StorageProvider.CreateSnapshot(ctx, dataProfile, pvcName)
 	if err != nil {
 		log.Error(err, "unable to create VolumeSnapshot")
+		dataProfile.Status.Phase = vandalv1alpha1.DataProfilePhaseFailed
+		if err := r.Status().Update(ctx, dataProfile); err != nil {
+			log.Error(err, "unable to update DataProfile status")
+		}
+		return err
+	}
+
+	// 4. Set the phase to SnapshotReady
+	dataProfile.Status.Phase = vandalv1alpha1.DataProfilePhaseSnapshotReady
+	if err := r.Status().Update(ctx, dataProfile); err != nil {
+		log.Error(err, "unable to update DataProfile status")
 		return err
 	}
 
@@ -145,6 +178,6 @@ func (r *DataProfileReconciler) createVolumeSnapshot(ctx context.Context, dataPr
 // SetupWithManager sets up the controller with the Manager.
 func (r *DataProfileReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&phantomdbv1alpha1.DataProfile{}).
+		For(&vandalv1alpha1.DataProfile{}).
 		Complete(r)
 }

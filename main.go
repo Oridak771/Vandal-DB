@@ -33,9 +33,9 @@ import (
 
 	"github.com/robfig/cron/v3"
 
-	phantomdbv1alpha1 "github.com/phantom-db/phantom-db/apis/v1alpha1"
-	"github.com/phantom-db/phantom-db/controllers"
-	"github.com/phantom-db/phantom-db/storage"
+	vandalv1alpha1 "github.com/Oridak771/Vandal/apis/v1alpha1"
+	"github.com/Oridak771/Vandal/controllers"
+	"github.com/Oridak771/Vandal/storage"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -46,7 +46,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(phantomdbv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(vandalv1alpha1.AddToScheme(scheme))
 
 	// Add snapshot API to scheme
 	snapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
@@ -77,7 +77,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "3a8b643d.phantom.db.io",
+		LeaderElectionID:       "3a8b643d.vandal.db.io",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

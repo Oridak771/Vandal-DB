@@ -25,10 +25,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
+	vandalv1alpha1 "github.com/Oridak771/Vandal/apis/v1alpha1"
 )
 
 const dataCloneFinalizer = "vandal.db.io/finalizer"
@@ -60,7 +61,7 @@ func (r *DataCloneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	log := log.FromContext(ctx)
 
 	// Fetch the DataClone instance
-	var dataClone phantomdbv1alpha1.DataClone
+	var dataClone vandalv1alpha1.DataClone
 	if err := r.Get(ctx, req.NamespacedName, &dataClone); err != nil {
 		log.Error(err, "unable to fetch DataClone")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
@@ -101,21 +102,45 @@ func (r *DataCloneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	log.Info("Reconciling DataClone", "Name", dataClone.Name)
 
-	// 1. Create PVC from snapshot
+	// 1. Set the phase to CreatingPVC
+	if dataClone.Status.Phase == "" || dataClone.Status.Phase == vandalv1alpha1.DataClonePhasePending {
+		dataClone.Status.Phase = vandalv1alpha1.DataClonePhaseCreatingPVC
+		if err := r.Status().Update(ctx, &dataClone); err != nil {
+			log.Error(err, "unable to update DataClone status")
+			return ctrl.Result{}, err
+		}
+	}
+
+	// 2. Create RoleBinding for the service account
+	if err := r.createRoleBinding(ctx, &dataClone); err != nil {
+		log.Error(err, "unable to create RoleBinding", "DataClone", dataClone.Name)
+		return ctrl.Result{}, err
+	}
+
+	// 3. Create PVC from snapshot
 	pvc, err := r.createPVCFromSnapshot(ctx, &dataClone)
 	if err != nil {
 		log.Error(err, "unable to create PVC from snapshot", "DataClone", dataClone.Name)
 		return ctrl.Result{}, err
 	}
 
-	// 2. Create the database pod
+	// 4. Set the phase to PodInitializing
+	if dataClone.Status.Phase == vandalv1alpha1.DataClonePhaseCreatingPVC {
+		dataClone.Status.Phase = vandalv1alpha1.DataClonePhasePodInitializing
+		if err := r.Status().Update(ctx, &dataClone); err != nil {
+			log.Error(err, "unable to update DataClone status")
+			return ctrl.Result{}, err
+		}
+	}
+
+	// 5. Create the database pod
 	pod, err := r.createDatabasePod(ctx, &dataClone, pvc)
 	if err != nil {
 		log.Error(err, "unable to create database pod", "DataClone", dataClone.Name)
 		return ctrl.Result{}, err
 	}
 
-	// 3. Create the connection secret
+	// 6. Create the connection secret
 	secret, err := r.createConnectionSecret(ctx, &dataClone)
 	if err != nil {
 		log.Error(err, "unable to create connection secret", "DataClone", dataClone.Name)
@@ -129,15 +154,31 @@ func (r *DataCloneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// 5. Update status
-	dataClone.Status.Phase = "Ready"
-	dataClone.Status.ConnectionInfoSecret = secret.Name
+	// 8. Set the phase to Masking
+	if dataClone.Status.Phase == vandalv1alpha1.DataClonePhasePodInitializing {
+		dataClone.Status.Phase = vandalv1alpha1.DataClonePhaseMasking
+		if err := r.Status().Update(ctx, &dataClone); err != nil {
+			log.Error(err, "unable to update DataClone status")
+			return ctrl.Result{}, err
+		}
+	}
+
+	// TODO: Implement masking logic here
+
+	// 9. Update status
+	dataClone.Status.Phase = vandalv1alpha1.DataClonePhaseReady
+	dataClone.Status.DatabaseConnection = &vandalv1alpha1.DatabaseConnection{
+		Host:     service.Name,
+		Port:     service.Spec.Ports[0].Port,
+		User:     "user",     // TODO
+		Password: "password", // TODO
+	}
 	if err := r.Status().Update(ctx, &dataClone); err != nil {
 		log.Error(err, "unable to update DataClone status", "DataClone", dataClone.Name)
 		return ctrl.Result{}, err
 	}
 
-	// 6. Handle TTL
+	// 10. Handle TTL
 	if dataClone.Spec.TTL != nil {
 		ttl := dataClone.Spec.TTL.Duration
 		if ttl > 0 {
@@ -148,7 +189,7 @@ func (r *DataCloneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
-func (r *DataCloneReconciler) createPVCFromSnapshot(ctx context.Context, dataClone *phantomdbv1alpha1.DataClone) (*corev1.PersistentVolumeClaim, error) {
+func (r *DataCloneReconciler) createPVCFromSnapshot(ctx context.Context, dataClone *vandalv1alpha1.DataClone) (*corev1.PersistentVolumeClaim, error) {
 	log := log.FromContext(ctx)
 
 	// Define the PVC
@@ -156,6 +197,11 @@ func (r *DataCloneReconciler) createPVCFromSnapshot(ctx context.Context, dataClo
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      dataClone.Name,
 			Namespace: dataClone.Namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/name":       "vandal",
+				"app.kubernetes.io/instance":   dataClone.Name,
+				"app.kubernetes.io/created-by": "dataclone-controller",
+			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
@@ -178,20 +224,30 @@ func (r *DataCloneReconciler) createPVCFromSnapshot(ctx context.Context, dataClo
 	return pvc, nil
 }
 
-func (r *DataCloneReconciler) createDatabasePod(ctx context.Context, dataClone *phantomdbv1alpha1.DataClone, pvc *corev1.PersistentVolumeClaim) (*corev1.Pod, error) {
+func (r *DataCloneReconciler) createDatabasePod(ctx context.Context, dataClone *vandalv1alpha1.DataClone, pvc *corev1.PersistentVolumeClaim) (*corev1.Pod, error) {
 	log := log.FromContext(ctx)
+
+	image := "postgres:13"
+	if dataClone.Spec.Database != nil && dataClone.Spec.Database.Image != "" {
+		image = dataClone.Spec.Database.Image
+	}
 
 	// Define the Pod
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      dataClone.Name,
 			Namespace: dataClone.Namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/name":       "vandal",
+				"app.kubernetes.io/instance":   dataClone.Name,
+				"app.kubernetes.io/created-by": "dataclone-controller",
+			},
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
 					Name:  "postgres",
-					Image: "postgres:13", // TODO: Make image configurable
+					Image: image,
 					VolumeMounts: []corev1.VolumeMount{
 						{
 							Name:      "data",
@@ -224,21 +280,47 @@ func (r *DataCloneReconciler) createDatabasePod(ctx context.Context, dataClone *
 	return pod, nil
 }
 
-func (r *DataCloneReconciler) createConnectionSecret(ctx context.Context, dataClone *phantomdbv1alpha1.DataClone) (*corev1.Secret, error) {
+func (r *DataCloneReconciler) createConnectionSecret(ctx context.Context, dataClone *vandalv1alpha1.DataClone) (*corev1.Secret, error) {
 	log := log.FromContext(ctx)
+
+	user := "postgres"
+	password := "password" // TODO: Generate random password
+	dbname := "postgres"
+
+	if dataClone.Spec.Database != nil {
+		if dataClone.Spec.Database.User != "" {
+			user = dataClone.Spec.Database.User
+		}
+		if dataClone.Spec.Database.DBName != "" {
+			dbname = dataClone.Spec.Database.DBName
+		}
+		if dataClone.Spec.Database.PasswordSecretRef != nil {
+			secret := &corev1.Secret{}
+			err := r.Get(ctx, client.ObjectKey{Namespace: dataClone.Namespace, Name: dataClone.Spec.Database.PasswordSecretRef.Name}, secret)
+			if err != nil {
+				return nil, err
+			}
+			password = string(secret.Data[dataClone.Spec.Database.PasswordSecretRef.Key])
+		}
+	}
 
 	// Define the Secret
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      dataClone.Name,
 			Namespace: dataClone.Namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/name":       "vandal",
+				"app.kubernetes.io/instance":   dataClone.Name,
+				"app.kubernetes.io/created-by": "dataclone-controller",
+			},
 		},
 		StringData: map[string]string{
 			"host":     dataClone.Name,
 			"port":     "5432",
-			"user":     "postgres",
-			"password": "password", // TODO: Generate random password
-			"dbname":   "postgres",
+			"user":     user,
+			"password": password,
+			"dbname":   dbname,
 		},
 	}
 
@@ -252,7 +334,7 @@ func (r *DataCloneReconciler) createConnectionSecret(ctx context.Context, dataCl
 	return secret, nil
 }
 
-func (r *DataCloneReconciler) createService(ctx context.Context, dataClone *phantomdbv1alpha1.DataClone) (*corev1.Service, error) {
+func (r *DataCloneReconciler) createService(ctx context.Context, dataClone *vandalv1alpha1.DataClone) (*corev1.Service, error) {
 	log := log.FromContext(ctx)
 
 	// Define the Service
@@ -260,6 +342,11 @@ func (r *DataCloneReconciler) createService(ctx context.Context, dataClone *phan
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      dataClone.Name,
 			Namespace: dataClone.Namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/name":       "vandal",
+				"app.kubernetes.io/instance":   dataClone.Name,
+				"app.kubernetes.io/created-by": "dataclone-controller",
+			},
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: map[string]string{
@@ -283,11 +370,12 @@ func (r *DataCloneReconciler) createService(ctx context.Context, dataClone *phan
 	return service, nil
 }
 
-func (r *DataCloneReconciler) cleanupResources(ctx context.Context, dataClone *phantomdbv1alpha1.DataClone) error {
+func (r *DataCloneReconciler) cleanupResources(ctx context.Context, dataClone *vandalv1alpha1.DataClone) error {
 	log := log.FromContext(ctx)
 
-	// Delete the pod, pvc, secret, and service
+	// Delete the rolebinding, pod, pvc, secret, and service
 	resources := []client.Object{
+		&rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "dataclone-editor-rolebinding", Namespace: dataClone.Namespace}},
 		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: dataClone.Name, Namespace: dataClone.Namespace}},
 		&corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: dataClone.Name, Namespace: dataClone.Namespace}},
 		&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: dataClone.Name, Namespace: dataClone.Namespace}},
@@ -308,6 +396,44 @@ func (r *DataCloneReconciler) cleanupResources(ctx context.Context, dataClone *p
 // SetupWithManager sets up the controller with the Manager.
 func (r *DataCloneReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&phantomdbv1alpha1.DataClone{}).
+		For(&vandalv1alpha1.DataClone{}).
+		Owns(&corev1.Pod{}).
+		Owns(&corev1.PersistentVolumeClaim{}).
+		Owns(&corev1.Secret{}).
+		Owns(&corev1.Service{}).
+		Owns(&rbacv1.RoleBinding{}).
 		Complete(r)
+}
+
+func (r *DataCloneReconciler) createRoleBinding(ctx context.Context, dataClone *vandalv1alpha1.DataClone) error {
+	log := log.FromContext(ctx)
+
+	// Define the RoleBinding
+	roleBinding := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dataclone-editor-rolebinding",
+			Namespace: dataClone.Namespace,
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     "dataclone-editor-role",
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "default",
+				Namespace: "default",
+			},
+		},
+	}
+
+	// Create the RoleBinding
+	if err := r.Create(ctx, roleBinding); err != nil {
+		log.Error(err, "unable to create RoleBinding")
+		return err
+	}
+
+	log.Info("Created RoleBinding", "RoleBinding", roleBinding.Name)
+	return nil
 }

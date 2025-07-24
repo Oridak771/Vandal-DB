@@ -60,6 +60,25 @@ rules:
   - update
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  - pods
+  - secrets
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+  resourceNames:
+  - "*"
+  matchLabels:
+    app.kubernetes.io/created-by: dataclone-controller
+- apiGroups:
   - vandal.db.io
   resources:
   - dataclones
@@ -72,13 +91,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - phantom.db.io
+  - vandal.db.io
   resources:
   - dataclones/finalizers
   verbs:
   - update
 - apiGroups:
-  - phantom.db.io
+  - vandal.db.io
   resources:
   - dataclones/status
   verbs:
@@ -86,7 +105,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - phantom.db.io
+  - vandal.db.io
   resources:
   - dataprofiles
   verbs:
@@ -98,13 +117,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - phantom.db.io
+  - vandal.db.io
   resources:
   - dataprofiles/finalizers
   verbs:
   - update
 - apiGroups:
-  - phantom.db.io
+  - vandal.db.io
   resources:
   - dataprofiles/status
   verbs:

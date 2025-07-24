@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
+	vandalv1alpha1 "github.com/Oridak771/Vandal/apis/v1alpha1"
 	snapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -23,7 +23,7 @@ func NewEBSProvider(client client.Client) StorageProvider {
 }
 
 // CreateSnapshot creates a new VolumeSnapshot for an EBS volume.
-func (p *ebsProvider) CreateSnapshot(ctx context.Context, dataProfile *phantomdbv1alpha1.DataProfile, pvcName string) (*snapshotv1.VolumeSnapshot, error) {
+func (p *ebsProvider) CreateSnapshot(ctx context.Context, dataProfile *vandalv1alpha1.DataProfile, pvcName string) (*snapshotv1.VolumeSnapshot, error) {
 	snapshot := &snapshotv1.VolumeSnapshot{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%d", dataProfile.Name, time.Now().Unix()),
@@ -51,7 +51,7 @@ func (p *ebsProvider) GetSnapshotStatus(ctx context.Context, snapshot *snapshotv
 }
 
 // CleanupSnapshots deletes old snapshots based on the retention policy.
-func (p *ebsProvider) CleanupSnapshots(ctx context.Context, dataProfile *phantomdbv1alpha1.DataProfile) error {
+func (p *ebsProvider) CleanupSnapshots(ctx context.Context, dataProfile *vandalv1alpha1.DataProfile) error {
 	// 1. List all snapshots for the DataProfile
 	var snapshotList snapshotv1.VolumeSnapshotList
 	if err := p.List(ctx, &snapshotList, client.InNamespace(dataProfile.Namespace)); err != nil {

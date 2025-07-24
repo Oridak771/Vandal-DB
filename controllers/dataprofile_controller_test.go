@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
+	vandalv1alpha1 "github.com/Oridak771/Vandal/apis/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -39,7 +39,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = phantomdbv1alpha1.AddToScheme(scheme.Scheme)
+	err = vandalv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
@@ -61,13 +61,13 @@ var _ = Describe("DataProfile controller", func() {
 		It("Should create a new DataProfile object", func() {
 			By("Creating a new DataProfile")
 			ctx := context.Background()
-			dataProfile := &phantomdbv1alpha1.DataProfile{
+			dataProfile := &vandalv1alpha1.DataProfile{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-dataprofile",
 					Namespace: "default",
 				},
-				Spec: phantomdbv1alpha1.DataProfileSpec{
-					Target: phantomdbv1alpha1.DatabaseTarget{
+				Spec: vandalv1alpha1.DataProfileSpec{
+					Target: vandalv1alpha1.DatabaseTarget{
 						SecretName: "test-secret",
 					},
 				},

@@ -12,12 +12,12 @@ This guide will walk you through the process of setting up Vandal-DB and creatin
 
 1.  **Install the CRDs:**
     ```
-    kubectl apply -f https://raw.githubusercontent.com/vandal-db/vandal-db/main/config/crd/vandal.db.io_dataprofiles.yaml
-    kubectl apply -f https://raw.githubusercontent.com/vandal-db/vandal-db/main/config/crd/vandal.db.io_dataclones.yaml
+    kubectl apply -f https://raw.githubusercontent.com/vandal/vandal/main/config/crd/vandal.db.io_dataprofiles.yaml
+    kubectl apply -f https://raw.githubusercontent.com/vandal/vandal/main/config/crd/vandal.db.io_dataclones.yaml
     ```
 2.  **Install the Controller Manager:**
     ```
-    kubectl apply -f https://raw.githubusercontent.com/vandal-db/vandal-db/main/config/manager/manager.yaml
+    kubectl apply -f https://raw.githubusercontent.com/vandal/vandal/main/config/manager/manager.yaml
     ```
 
 ## Creating a Clone

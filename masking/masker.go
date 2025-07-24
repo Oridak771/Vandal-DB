@@ -3,14 +3,15 @@ package masking
 import (
 	"io"
 
-phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
+	vandalv1alpha1 "github.com/Oridak771/Vandal/apis/v1alpha1"
+	"github.com/Oridak771/Vandal/schema"
 )
 
 // Masker defines the interface for a data masking engine.
 type Masker interface {
-	// Mask takes a stream of data and a set of masking rules,
+	// Mask takes a stream of data, a set of masking rules, and the database schema,
 	// and returns a stream of masked data.
-	Mask(in io.Reader, rules []phantomdbv1alpha1.MaskingRule) (io.Reader, error)
+	Mask(in io.Reader, rules []vandalv1alpha1.MaskingRule, schema *schema.Schema) (io.Reader, error)
 }
 
 // NewMasker creates a new masker.
@@ -22,9 +23,9 @@ func NewMasker() Masker {
 type defaultMasker struct{}
 
 // Mask implements the Masker interface.
-func (m *defaultMasker) Mask(in io.Reader, rules []phantomdbv1alpha1.MaskingRule) (io.Reader, error) {
+func (m *defaultMasker) Mask(in io.Reader, rules []vandalv1alpha1.MaskingRule, schema *schema.Schema) (io.Reader, error) {
 	// This is a placeholder implementation.
 	// In a real implementation, this would be a streaming pipeline
-	// that applies the masking rules to the input stream.
+	// that applies the masking rules to the input stream based on the schema.
 	return in, nil
 }

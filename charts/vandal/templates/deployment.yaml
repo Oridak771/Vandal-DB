@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "vandal-db.fullname" . }}
+  name: {{ include "vandal.fullname" . }}
   labels:
-    {{- include "vandal-db.labels" . | nindent 4 }}
+    {{- include "vandal.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "vandal-db.selectorLabels" . | nindent 6 }}
+      {{- include "vandal.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,13 +16,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "vandal-db.selectorLabels" . | nindent 8 }}
+        {{- include "vandal.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "vandal-db.serviceAccountName" . }}
+      serviceAccountName: {{ include "vandal.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:

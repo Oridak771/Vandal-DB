@@ -1,11 +1,13 @@
-module github.com/vandal-db/vandal-db
+module github.com/Oridak771/Vandal
 
 go 1.24.0
 
 toolchain go1.24.5
 
 require (
+	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.2.0
+	github.com/lib/pq v1.10.9
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.37.0
 	github.com/robfig/cron/v3 v3.0.1

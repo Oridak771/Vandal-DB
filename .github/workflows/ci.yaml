@@ -25,5 +25,5 @@ jobs:
 
     - name: Build Docker images
       run: |
-        docker build -t vandal-db-manager:latest .
-        docker build -t vandal-db-masking-job:latest -f cmd/masking-job/Dockerfile .
+        docker build -t vandal-manager:latest .
+        docker build -t vandal-masking-job:latest -f cmd/masking-job/Dockerfile .

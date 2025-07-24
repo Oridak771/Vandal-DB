@@ -4,6 +4,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	// DataProfilePhasePending is the initial phase of a DataProfile.
+	DataProfilePhasePending = "Pending"
+	// DataProfilePhaseCreatingSnapshot is the phase when a snapshot is being created.
+	DataProfilePhaseCreatingSnapshot = "CreatingSnapshot"
+	// DataProfilePhaseSnapshotReady is the phase when the snapshot is ready.
+	DataProfilePhaseSnapshotReady = "SnapshotReady"
+	// DataProfilePhaseFailed is the phase when the snapshot has failed.
+	DataProfilePhaseFailed = "Failed"
+)
+
 // DataProfileSpec defines the desired state of DataProfile
 type DataProfileSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -29,6 +40,8 @@ type DataProfileSpec struct {
 type DatabaseTarget struct {
 	// SecretName is the name of the secret containing the database credentials.
 	SecretName string `json:"secretName"`
+	// PVCName is the name of the PersistentVolumeClaim to be snapshotted.
+	PVCName string `json:"pvcName"`
 }
 
 // RetentionPolicy defines the policy for retaining snapshots.
@@ -59,6 +72,10 @@ type MaskingRule struct {
 type DataProfileStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Phase is the current lifecycle phase of the data profile.
+	// +optional
+	Phase string `json:"phase,omitempty"`
 
 	// LastSnapshotTime is the time the last snapshot was taken.
 	// +optional

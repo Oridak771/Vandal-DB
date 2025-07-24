@@ -3,7 +3,9 @@ package masking
 import (
 	"context"
 
-phantomdbv1alpha1 "github.com/vandal-db/vandal-db/apis/v1alpha1"
+	vandalv1alpha1 "github.com/Oridak771/Vandal/apis/v1alpha1"
+	"github.com/Oridak771/Vandal/storage"
+	"golang.org/x/sync/errgroup"
 )
 
 // Pipeline defines the interface for a masking pipeline.
@@ -13,37 +15,50 @@ type Pipeline interface {
 }
 
 // NewPipeline creates a new masking pipeline.
-func NewPipeline(dumper PostgresDumper, masker Masker, restorer PostgresRestorer, rules []phantomdbv1alpha1.MaskingRule) Pipeline {
+func NewPipeline(db storage.Database, masker Masker, rules []vandalv1alpha1.MaskingRule) Pipeline {
 	return &pipeline{
-		dumper:   dumper,
-		masker:   masker,
-		restorer: restorer,
-		rules:    rules,
+		db:     db,
+		masker: masker,
+		rules:  rules,
 	}
 }
 
 // pipeline is a basic implementation of the Pipeline interface.
 type pipeline struct {
-	dumper   PostgresDumper
-	masker   Masker
-	restorer PostgresRestorer
-	rules    []phantomdbv1alpha1.MaskingRule
+	db     storage.Database
+	masker Masker
+	rules  []vandalv1alpha1.MaskingRule
 }
 
 // Run implements the Pipeline interface.
 func (p *pipeline) Run(ctx context.Context) error {
-	// 1. Create a dump of the database.
-	dumpReader, err := p.dumper.Dump()
+	// 1. Get the database schema.
+	schema, err := p.db.GetSchema(ctx)
 	if err != nil {
 		return err
 	}
 
-	// 2. Mask the data.
-	maskedReader, err := p.masker.Mask(dumpReader, p.rules)
-	if err != nil {
-		return err
+	g, ctx := errgroup.WithContext(ctx)
+
+	for _, table := range schema.Tables {
+		table := table // https://golang.org/doc/faq#closures_and_goroutines
+		g.Go(func() error {
+			// 1. Create a dump of the table.
+			dumpReader, err := p.db.DumpTable(ctx, table.Name)
+			if err != nil {
+				return err
+			}
+
+			// 2. Mask the data.
+			maskedReader, err := p.masker.Mask(dumpReader, p.rules, schema)
+			if err != nil {
+				return err
+			}
+
+			// 3. Restore the masked data.
+			return p.db.Restore(ctx, maskedReader)
+		})
 	}
 
-	// 3. Restore the masked data.
-	return p.restorer.Restore(maskedReader)
+	return g.Wait()
 }

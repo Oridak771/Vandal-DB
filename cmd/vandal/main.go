@@ -1,7 +1,7 @@
 package main
 
 import (
-"github.com/vandal-db/vandal-db/cmd/phantom/cmd"
+	"github.com/Oridak771/Vandal/cmd/vandal/cmd"
 )
 
 func main() {

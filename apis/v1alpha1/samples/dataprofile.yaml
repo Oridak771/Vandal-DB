@@ -1,4 +1,4 @@
-apiVersion: phantom.db.io/v1alpha1
+apiVersion: vandal.db.io/v1alpha1
 kind: DataProfile
 metadata:
   name: postgres-profile-example

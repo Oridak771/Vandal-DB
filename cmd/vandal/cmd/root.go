@@ -9,8 +9,8 @@ import (
 
 var rootCmd = &cobra.Command{
 Use:   "vandal",
-Short: "Vandal-DB CLI",
-Long:  `A command-line interface for managing Vandal-DB resources.`,
+Short: "Vandal CLI",
+Long:  `A command-line interface for managing Vandal resources.`,
 }
 
 func Execute() {
